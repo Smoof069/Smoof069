@@ -114,13 +114,23 @@ function startFarming(zone, point)
     isPlayerFarming = true
     point.cooldownUntil = GetGameTimer() + zone.data.PointCooldown
 
-    -- Switched to a crouch/inspect animation for a better "farming" look
-    local dict = "amb@world_human_crouch_inspect@male@base"
+    -- Using a stable animation and adding a timeout to prevent script freezing
+    local dict = "mini@repair"
     RequestAnimDict(dict)
-    while not HasAnimDictLoaded(dict) do
+
+    local timeout = 20 -- 20 * 100ms = 2 seconds timeout
+    while not HasAnimDictLoaded(dict) and timeout > 0 do
         Citizen.Wait(100)
+        timeout = timeout - 1
     end
-    TaskPlayAnim(PlayerPedId(), dict, "base", 8.0, -8.0, -1, 49, 0, false, false, false)
+
+    if timeout == 0 then
+        print("[esx_aramidfarm] ERROR: Animation dictionary failed to load: " .. dict)
+        isPlayerFarming = false
+        return
+    end
+
+    TaskPlayAnim(PlayerPedId(), dict, "fixing_a_ped", 8.0, -8.0, -1, 49, 0, false, false, false)
 
     ESX.ShowNotification("Du beginnst mit dem Farmen...")
     Citizen.Wait(zone.data.HarvestTime)
