@@ -114,13 +114,13 @@ function startFarming(zone, point)
     isPlayerFarming = true
     point.cooldownUntil = GetGameTimer() + zone.data.PointCooldown
 
-    -- More suitable animation
-    local dict = "mini@repair"
+    -- Switched to a crouch/inspect animation for a better "farming" look
+    local dict = "amb@world_human_crouch_inspect@male@base"
     RequestAnimDict(dict)
     while not HasAnimDictLoaded(dict) do
         Citizen.Wait(100)
     end
-    TaskPlayAnim(PlayerPedId(), dict, "fixing_a_ped", 8.0, -8.0, -1, 49, 0, false, false, false)
+    TaskPlayAnim(PlayerPedId(), dict, "base", 8.0, -8.0, -1, 49, 0, false, false, false)
 
     ESX.ShowNotification("Du beginnst mit dem Farmen...")
     Citizen.Wait(zone.data.HarvestTime)
