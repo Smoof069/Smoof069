@@ -6,12 +6,18 @@ Config.FarmZones = {
         Item = "aramidfasern", -- The item name in your ESX items database
         ItemLabel = "Aramidfasern",
         Amount = 1, -- Amount of item to give per harvest
-        HarvestTime = 1500, -- Time in milliseconds, adjusted for pickup animation
+        HarvestTime = 5000, -- Time in milliseconds
 
         -- Set to true if a tool is required for farming
         ToolRequired = true,
         -- The item name from your items database that is required.
         RequiredTool = "knife",
+
+        Marker = {
+            Type = 1,
+            Color = { r = 255, g = 255, b = 0, a = 100 },
+            Size = { x = 0.5, y = 0.5, z = 0.5 }
+        },
 
         Blip = {
             Pos = { x = 1959.28, y = 4794.43, z = 43.46 },
