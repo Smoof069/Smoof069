@@ -6,8 +6,7 @@ Config.FarmZones = {
         Item = "aramidfasern", -- The item name in your ESX items database
         ItemLabel = "Aramidfasern",
         Amount = 1, -- Amount of item to give per harvest
-        HarvestTime = 2500, -- Time in milliseconds
-        PointCooldown = 10000, -- Time in milliseconds a point is disabled after harvest
+        HarvestTime = 1500, -- Time in milliseconds, adjusted for pickup animation
 
         -- Set to true if a tool is required for farming
         ToolRequired = true,

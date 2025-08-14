@@ -1,7 +1,7 @@
 ESX = nil
 local PlayerData = {}
 local farmZones = {}
-local isPlayerFarming = false -- Use a local flag for the player
+local isPlayerFarming = false
 
 Citizen.CreateThread(function()
     while ESX == nil do
@@ -49,10 +49,7 @@ function initializeFarmZones()
         end
 
         for _, pos in ipairs(farmData.StaticPoints) do
-            table.insert(zone.points, {
-                pos = pos,
-                cooldownUntil = 0
-            })
+            table.insert(zone.points, { pos = pos })
         end
 
         farmZones[farmName] = zone
@@ -61,7 +58,7 @@ end
 
 Citizen.CreateThread(function()
     while true do
-        Citizen.Wait(5) -- Small wait to prevent meltdown
+        Citizen.Wait(5)
         local playerCoords = GetEntityCoords(PlayerPedId())
         local canFarm = false
 
@@ -71,32 +68,27 @@ Citizen.CreateThread(function()
 
                 if dist < 2.0 then
                     canFarm = true
-                    if GetGameTimer() > point.cooldownUntil then
-                        ESX.ShowHelpNotification("Drücke ~INPUT_CONTEXT~, um " .. zone.data.ItemLabel .. " zu farmen.")
-                        if IsControlJustReleased(0, 38) then -- Key E
-                            if hasRequiredTool(zone.data) then
-                                startFarming(zone, point)
-                            else
-                                ESX.ShowNotification("Dir fehlt das nötige Werkzeug: " .. zone.data.RequiredTool)
-                            end
+                    ESX.ShowHelpNotification("Drücke ~INPUT_CONTEXT~, um " .. zone.data.ItemLabel .. " zu farmen.")
+                    if IsControlJustReleased(0, 38) then -- Key E
+                        if hasRequiredTool(zone.data) then
+                            startFarming(zone)
+                        else
+                            ESX.ShowNotification("Dir fehlt das nötige Werkzeug: " .. zone.data.RequiredTool)
                         end
-                    else
-                        ESX.ShowHelpNotification("Dieser Ort wurde bereits abgeerntet. Versuche es später erneut.")
                     end
-                    -- No marker is drawn, as requested
                 end
             end
         end
 
         if not canFarm then
-            Citizen.Wait(500) -- Sleep longer if not near any point
+            Citizen.Wait(500)
         end
     end
 end)
 
 function hasRequiredTool(farmData)
     if not farmData.ToolRequired then
-        return true -- No tool required
+        return true
     end
 
     local requiredItem = farmData.RequiredTool
@@ -108,34 +100,35 @@ function hasRequiredTool(farmData)
     return false
 end
 
-function startFarming(zone, point)
+function startFarming(zone)
     if isPlayerFarming then return end
 
     isPlayerFarming = true
-    point.cooldownUntil = GetGameTimer() + zone.data.PointCooldown
+    local playerPed = PlayerPedId()
 
-    -- Using a stable animation and adding a timeout to prevent script freezing
-    local dict = "mini@repair"
+    FreezeEntityPosition(playerPed, true)
+
+    local dict = "random@domestic"
     RequestAnimDict(dict)
 
-    local timeout = 20 -- 20 * 100ms = 2 seconds timeout
+    local timeout = 20
     while not HasAnimDictLoaded(dict) and timeout > 0 do
         Citizen.Wait(100)
         timeout = timeout - 1
     end
 
-    if timeout == 0 then
+    if timeout > 0 then
+        TaskPlayAnim(playerPed, dict, "pickup_low", 8.0, -8.0, -1, 0, 0, false, false, false)
+    else
         print("[esx_aramidfarm] ERROR: Animation dictionary failed to load: " .. dict)
-        isPlayerFarming = false
-        return
     end
-
-    TaskPlayAnim(PlayerPedId(), dict, "fixing_a_ped", 8.0, -8.0, -1, 49, 0, false, false, false)
 
     ESX.ShowNotification("Du beginnst mit dem Farmen...")
     Citizen.Wait(zone.data.HarvestTime)
 
-    ClearPedTasks(PlayerPedId())
-    isPlayerFarming = false
     TriggerServerEvent('esx_aramidfarm:giveItem', zone.data.Item, zone.data.Amount)
+
+    ClearPedTasks(playerPed)
+    FreezeEntityPosition(playerPed, false)
+    isPlayerFarming = false
 end
